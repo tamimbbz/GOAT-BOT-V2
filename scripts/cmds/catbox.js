@@ -1,13 +1,13 @@
-!cmd install catbox.js module.exports = {
+module.exports = {
     config: {
         name: "catbox",
         aliases: ["cb"],
-        version: "5.5",
+        version: "6.7",
         author: "xalman",
         countDown: 5,
         role: 0,
         category: "media",
-        guide: { en: "{pn} [reply]" }
+        guide: { en: "{pn} [reply/image/video]" }
     },
 
     onStart: async function ({ event, api, message }) {
@@ -17,47 +17,47 @@
         const path = require("path");
 
         const { messageReply, messageID } = event;
-        if (!messageReply || !messageReply.attachments[0]) {
-            return message.reply("⚠️ Media reply koro age!");
+        const attachment = messageReply?.attachments[0] || event.attachments[0];
+        
+        if (!attachment) {
+            return message.reply("⚠️ দয়া করে একটি ছবি বা ভিডিওতে রিপ্লাই দিন!");
         }
-
-        const nx_media = messageReply.attachments[0];
-        const nx_ext = nx_media.type === "video" ? ".mp4" : (nx_media.type === "animated_image" ? ".gif" : ".jpg");
-        const nx_temp_name = `xalman_nx_${Date.now()}${nx_ext}`;
-        const nx_path = path.join(__dirname, nx_temp_name);
 
         api.setMessageReaction("⏳", messageID, () => {}, true);
 
+        const ext = attachment.type === "video" ? ".mp4" : (attachment.type === "animated_image" ? ".gif" : ".jpg");
+        const tempPath = path.join(__dirname, `nx_temp_${Date.now()}${ext}`);
+
         try {
-            const nx_api_config = await axios.get("https://raw.githubusercontent.com/goatbotnx/Sexy-nx2.0Updated/refs/heads/main/nx-apis.json");
-            let nx_target = nx_api_config.data.catbox || "https://catbox.moe/user/api.php";
-            if (!nx_target.endsWith('/upload')) nx_target = nx_target.replace(/\/$/, "") + "/upload";
+            const github_raw_url = "https://raw.githubusercontent.com/goatbotnx/Sexy-nx2.0Updated/refs/heads/main/nx-apis.json";
+            const configRes = await axios.get(github_raw_url);
+            const base_url = configRes.data.catbox;
 
-            const nx_input = await axios.get(nx_media.url, { responseType: "stream" });
-            const nx_output = fs.createWriteStream(nx_path);
-            nx_input.data.pipe(nx_output);
+            if (!base_url) throw new Error("API URL not found in GitHub config.");
+            
+            const nx_api_url = base_url.endsWith('/upload') ? base_url : `${base_url.replace(/\/$/, "")}/upload`;
 
-            await new Promise((resolve, reject) => {
-                nx_output.on("finish", resolve);
-                nx_output.on("error", reject);
+            const response = await axios.get(attachment.url, { responseType: "arraybuffer" });
+            fs.writeFileSync(tempPath, Buffer.from(response.data));
+
+            const form = new FormData();
+            form.append("fileToUpload", fs.createReadStream(tempPath));
+
+            const uploadRes = await axios.post(nx_api_url, form, {
+                headers: { ...form.getHeaders() },
+                maxContentLength: Infinity,
+                maxBodyLength: Infinity
             });
 
-            const nx_body = new FormData();
-            nx_body.append("fileToUpload", fs.createReadStream(nx_path), { filename: nx_temp_name });
-
-            const { data } = await axios.post(nx_target, nx_body, {
-                headers: { ...nx_body.getHeaders(), "User-Agent": "Mozilla/5.0" }
-            });
-
-            if (fs.existsSync(nx_path)) fs.unlinkSync(nx_path);
+            if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
             
             api.setMessageReaction("✅", messageID, () => {}, true);
-            return message.reply(data);
+            return message.reply(uploadRes.data);
 
-        } catch (nx_err) {
-            if (fs.existsSync(nx_path)) fs.unlinkSync(nx_path);
+        } catch (err) {
+            if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
             api.setMessageReaction("❌", messageID, () => {}, true);
-            return message.reply("Error: " + nx_err.message);
+            return message.reply("❌ Error: " + (err.response?.data || err.message));
         }
     }
 };
