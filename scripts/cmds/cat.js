@@ -7,7 +7,7 @@ module.exports = {
     role: 0,
     author: "xalman",
     description: "Sends 4 random cat images",
-    category: "entertainment",
+    category: "image",
     guide: "{pn}",
     countDown: 3
   },
