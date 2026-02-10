@@ -1,4 +1,4 @@
-const header = `👑 VIP USER 🫦 👑`;
+const header = `👑 𝗩𝗜𝗣 𝗨𝗦𝗘𝗔𝗥🫦 👑`;
 
 const fs = require("fs");
 
@@ -37,7 +37,7 @@ module.exports = {
 	config: {
 		name: "vip",
 		version: "1.0", // Updated version to 1.0
-		author: "xalman",
+		author: "𝗧𝗮𝗺𝗶𝗺 𝗕𝗯𝘇",
 		role: 2,
 		category: "Config",
 		guide: {
@@ -63,9 +63,9 @@ module.exports = {
 					const userName = userData.name || "Unknown User";
 					// Send a message to the added VIP user
 					message.reply(`${header}
-${userName} (${uidToAdd}) has been successfully added to the VIP list.`);
+${userName} (${uidToAdd})  লে ফকিন্নি তরে 𝗩𝗜𝗣 অ্যাড করে😛 .`);
 					api.sendMessage(`${header}
-Congratulations ${userName}! (${uidToAdd}), you have been added to the VIP list. Enjoy the VIP Features!!!`, uidToAdd);
+Congratulations ${userName}! (${uidToAdd}),লে ফকিন্নি তরে 𝗩𝗜𝗣 অ্যাড করে😛 . 𝗘𝗻𝗷𝗼𝘆 𝘁𝗵𝗲 𝘃𝗶𝗽 𝗳𝗲𝗮𝘁𝘂𝗿𝗲𝘀!!!`, uidToAdd);
 					// Send a message to all VIP users
 					Object.keys(vipData).forEach(async (uid) => {
 						if (uid !== uidToAdd) {
